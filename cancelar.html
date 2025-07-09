@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Cancelar Reserva</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCmAAzRML1XO8diaB1Z3cWI8RsLJcBO2Fc",
+      authDomain: "agendarquadra.firebaseapp.com",
+      projectId: "agendarquadra",
+      storageBucket: "agendarquadra.firebasestorage.app",
+      messagingSenderId: "652304158030",
+      appId: "1:652304158030:web:9573e31640615c3e81221f"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    async function cancelarReserva() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const id = urlParams.get('id');
+
+      if (!id) {
+        document.body.innerHTML = "<h2>ID da reserva não informado.</h2>";
+        return;
+      }
+
+      const confirmacao = confirm("Você deseja cancelar esta reserva?");
+      if (!confirmacao) return;
+
+      try {
+        await db.collection("reservas").doc(id).delete();
+        document.body.innerHTML = "<h2>Reserva cancelada com sucesso!</h2>";
+      } catch (error) {
+        console.error("Erro ao cancelar reserva:", error);
+        document.body.innerHTML = "<h2>Erro ao cancelar reserva.</h2>";
+      }
+    }
+
+    window.onload = cancelarReserva;
+  </script>
+</head>
+<body>
+  <h2>Processando cancelamento...</h2>
+</body>
+</html>
