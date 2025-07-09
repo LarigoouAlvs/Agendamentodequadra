@@ -201,7 +201,7 @@ function confirmarReserva() {
 
   db.collection("reservas").add(reserva)
     .then((docRef) => {
-      const cancelarLink = `https://agendarquadra.web.app/cancelar.html?id=${docRef.id}`;
+      const cancelarLink = `https://larigooualvs.github.io/Agendamentodequadra/cancelar.html?id=${docRef.id}`;
       const msg = `Olá! Reserva confirmada:
 Quadra: ${reserva.quadra}
 Horário: ${reserva.horario}
