@@ -87,133 +87,134 @@
   </div>
 
   <script>
-    const firebaseConfig = {
-  apiKey: "AIzaSyCmAAzRML1XO8diaB1Z3cWI8RsLJcBO2Fc",
-  authDomain: "agendarquadra.firebaseapp.com",
-  projectId: "agendarquadra",
-  storageBucket: "agendarquadra.firebasestorage.app",
-  messagingSenderId: "652304158030",
-  appId: "1:652304158030:web:9573e31640615c3e81221f"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+  const firebaseConfig = {
+    apiKey: "AIzaSyCmAAzRML1XO8diaB1Z3cWI8RsLJcBO2Fc",
+    authDomain: "agendarquadra.firebaseapp.com",
+    projectId: "agendarquadra",
+    storageBucket: "agendarquadra.firebasestorage.app",
+    messagingSenderId: "652304158030",
+    appId: "1:652304158030:web:9573e31640615c3e81221f"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 
-let btnSelecionado = null;
-let dadosReserva = {};
-let dataAtual = new Date();
+  let btnSelecionado = null;
+  let dadosReserva = {};
+  let dataAtual = new Date();
 
-const horarios = [
-  "17h - 18h",
-  "18h - 19h",
-  "19h - 20h",
-  "20h - 21h",
-  "21h - 22h",
-  "22h - 23h",
-  "23h - 00h"
-];
+  const horarios = [
+    "17h - 18h",
+    "18h - 19h",
+    "19h - 20h",
+    "20h - 21h",
+    "21h - 22h",
+    "22h - 23h",
+    "23h - 00h"
+  ];
 
-const quadras = [
-  { nome: "AREIA 1 COBERTA", valor: 100 },
-  { nome: "AREIA 2 DESCOBERTA", valor: 90 },
-  { nome: "SOCIETY 1", valor: 110 },
-  { nome: "SOCIETY 2", valor: 110 },
-  { nome: "FUTVÔLEI 1", valor: 100 },
-  { nome: "FUTVÔLEI 2", valor: 100 }
-];
+  const quadras = [
+    { nome: "AREIA 1 COBERTA", valor: 100 },
+    { nome: "AREIA 2 DESCOBERTA", valor: 90 },
+    { nome: "SOCIETY 1", valor: 110 },
+    { nome: "SOCIETY 2", valor: 110 },
+    { nome: "FUTVÔLEI 1", valor: 100 },
+    { nome: "FUTVÔLEI 2", valor: 100 }
+  ];
 
-function formatarData(data) {
-  return data.toLocaleDateString('pt-BR');
-}
-
-function renderQuadras() {
-  const quadrasContainer = document.getElementById("quadrasContainer");
-  quadrasContainer.innerHTML = "";
-  quadras.forEach(q => {
-    const row = document.createElement("div");
-    row.className = "grid-container";
-    const cellQuadra = document.createElement("div");
-    cellQuadra.className = "grid-item font-bold text-gray-700";
-    cellQuadra.textContent = q.nome;
-    row.appendChild(cellQuadra);
-    horarios.forEach(h => {
-      const btn = document.createElement("div");
-      btn.className = "grid-item disponivel";
-      btn.textContent = `R$${q.valor}`;
-      btn.onclick = () => abrirFormulario(btn, q.nome, h, q.valor);
-      row.appendChild(btn);
-    });
-    quadrasContainer.appendChild(row);
-  });
-}
-
-function carregarReservas() {
-  const dataString = formatarData(dataAtual);
-
-  renderQuadras(); // Renderiza a grade em estado inicial (todos disponíveis)
-
-  db.collection("reservas")
-    .where("data", "==", dataString)
-    .get()
-    .then(querySnapshot => {
-      const quadrasContainer = document.getElementById("quadrasContainer");
-
-      querySnapshot.forEach(doc => {
-        const reserva = doc.data();
-
-        const indiceQuadra = quadras.findIndex(q => q.nome === reserva.quadra);
-        const indiceHorario = horarios.findIndex(h => h === reserva.horario);
-
-        if (indiceQuadra >= 0 && indiceHorario >= 0) {
-          const row = quadrasContainer.children[indiceQuadra];
-          const btn = row.children[indiceHorario + 1];
-
-          btn.classList.remove("disponivel");
-          btn.classList.add("reservado");
-          btn.textContent = "Reservado";
-          btn.onclick = null; // remove clique para reservar um horário já reservado
-        }
-      });
-    })
-    .catch(error => {
-      console.error("Erro ao carregar reservas:", error);
-      alert("Erro ao carregar reservas: " + error.message);
-    });
-}
-
-function alterarDia(dias) {
-  dataAtual.setDate(dataAtual.getDate() + dias);
-  document.getElementById("dataSelecionada").innerText = formatarData(dataAtual);
-  carregarReservas();
-}
-
-function abrirFormulario(btn, quadra, horario, valor) {
-  btnSelecionado = btn;
-  dadosReserva = { quadra, horario, valor, data: formatarData(dataAtual) };
-  document.getElementById("resumo").innerText = `${quadra} - ${horario} - R$${valor} em ${formatarData(dataAtual)}`;
-  document.getElementById("modal").classList.remove("hidden");
-}
-
-function fecharModal() {
-  document.getElementById("modal").classList.add("hidden");
-  document.getElementById("nome").value = '';
-  document.getElementById("telefone").value = '';
-}
-
-function confirmarReserva() {
-  const nome = document.getElementById("nome").value.trim();
-  const telefone = document.getElementById("telefone").value.trim();
-
-  if (!nome || !telefone) {
-    alert("Preencha nome e telefone.");
-    return;
+  function formatarData(data) {
+    return data.toLocaleDateString('pt-BR');
   }
 
-  const reserva = { nome, telefone, ...dadosReserva, timestamp: new Date().toISOString() };
+  function renderQuadras() {
+    const quadrasContainer = document.getElementById("quadrasContainer");
+    quadrasContainer.innerHTML = "";
+    quadras.forEach(q => {
+      const row = document.createElement("div");
+      row.className = "grid-container";
+      const cellQuadra = document.createElement("div");
+      cellQuadra.className = "grid-item font-bold text-gray-700";
+      cellQuadra.textContent = q.nome;
+      row.appendChild(cellQuadra);
+      horarios.forEach(h => {
+        const btn = document.createElement("div");
+        btn.className = "grid-item disponivel";
+        btn.textContent = `R$${q.valor}`;
+        btn.onclick = () => abrirFormulario(btn, q.nome, h, q.valor);
+        row.appendChild(btn);
+      });
+      quadrasContainer.appendChild(row);
+    });
+  }
 
-  db.collection("reservas").add(reserva)
-    .then((docRef) => {
-      const cancelarLink = `https://larigooualvs.github.io/Agendamentodequadra/cancelar.html?id=${docRef.id}`;
-      const msg = `Olá! Reserva confirmada:
+  function carregarReservas() {
+    const dataString = formatarData(dataAtual);
+    renderQuadras();
+
+    db.collection("reservas")
+      .where("data", "==", dataString)
+      .get()
+      .then(querySnapshot => {
+        const quadrasContainer = document.getElementById("quadrasContainer");
+
+        querySnapshot.forEach(doc => {
+          const reserva = doc.data();
+          const indiceQuadra = quadras.findIndex(q => q.nome === reserva.quadra);
+          const indiceHorario = horarios.findIndex(h => h === reserva.horario);
+
+          if (indiceQuadra >= 0 && indiceHorario >= 0) {
+            const row = quadrasContainer.children[indiceQuadra];
+            const btn = row.children[indiceHorario + 1];
+
+            btn.classList.remove("disponivel");
+            btn.classList.add("reservado");
+            btn.textContent = "Reservado";
+            btn.onclick = null;
+          }
+        });
+
+        // Ativa cliques em botões "reservado"
+        ativarCancelamentoReservas();
+      })
+      .catch(error => {
+        console.error("Erro ao carregar reservas:", error);
+        alert("Erro ao carregar reservas: " + error.message);
+      });
+  }
+
+  function alterarDia(dias) {
+    dataAtual.setDate(dataAtual.getDate() + dias);
+    document.getElementById("dataSelecionada").innerText = formatarData(dataAtual);
+    carregarReservas();
+  }
+
+  function abrirFormulario(btn, quadra, horario, valor) {
+    btnSelecionado = btn;
+    dadosReserva = { quadra, horario, valor, data: formatarData(dataAtual) };
+    document.getElementById("resumo").innerText = `${quadra} - ${horario} - R$${valor} em ${formatarData(dataAtual)}`;
+    document.getElementById("modal").classList.remove("hidden");
+  }
+
+  function fecharModal() {
+    document.getElementById("modal").classList.add("hidden");
+    document.getElementById("nome").value = '';
+    document.getElementById("telefone").value = '';
+  }
+
+  function confirmarReserva() {
+    const nome = document.getElementById("nome").value.trim();
+    const telefone = document.getElementById("telefone").value.trim();
+
+    if (!nome || !telefone) {
+      alert("Preencha nome e telefone.");
+      return;
+    }
+
+    const reserva = { nome, telefone, ...dadosReserva, timestamp: new Date().toISOString() };
+
+    db.collection("reservas").add(reserva)
+      .then((docRef) => {
+        const cancelarLink = `https://larigooualvs.github.io/Agendamentodequadra/cancelar.html?id=${docRef.id}`;
+        const msg = `Olá! Reserva confirmada:
 Quadra: ${reserva.quadra}
 Horário: ${reserva.horario}
 Data: ${reserva.data}
@@ -222,26 +223,71 @@ Telefone: ${reserva.telefone}
 
 Para cancelar, clique aqui:
 ${cancelarLink}`;
-      const link = `https://wa.me/5547997212156?text=${encodeURIComponent(msg)}`;
-      window.open(link, '_blank');
+        const link = `https://wa.me/5547997212156?text=${encodeURIComponent(msg)}`;
+        window.open(link, '_blank');
 
-      btnSelecionado.classList.remove("disponivel");
-      btnSelecionado.classList.add("reservado");
-      btnSelecionado.textContent = "Reservado";
-      btnSelecionado.onclick = null;
+        btnSelecionado.classList.remove("disponivel");
+        btnSelecionado.classList.add("reservado");
+        btnSelecionado.textContent = "Reservado";
+        btnSelecionado.onclick = null;
 
-      fecharModal();
-      alert("Reserva confirmada!");
-    })
-    .catch(err => alert("Erro ao salvar: " + err.message));
-}
+        fecharModal();
+        alert("Reserva confirmada!");
+      })
+      .catch(err => alert("Erro ao salvar: " + err.message));
+  }
 
-// Inicialização ao carregar a página
-document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("dataSelecionada").innerText = formatarData(dataAtual);
-  carregarReservas();
-});
+  function ativarCancelamentoReservas() {
+    const quadrasContainer = document.getElementById("quadrasContainer");
 
-  </script>
+    quadrasContainer.querySelectorAll(".reservado").forEach(btn => {
+      btn.onclick = () => {
+        const confirmar = confirm("Deseja cancelar esta reserva?");
+        if (!confirmar) return;
+
+        const senha = prompt("Digite a senha do administrador para cancelar:");
+        if (senha !== "454623") {
+          alert("Senha incorreta!");
+          return;
+        }
+
+        const row = btn.parentElement;
+        const quadra = row.children[0].innerText;
+        const indexHorario = Array.from(row.children).indexOf(btn) - 1;
+        const horario = horarios[indexHorario];
+        const data = formatarData(dataAtual);
+
+        db.collection("reservas")
+          .where("data", "==", data)
+          .where("quadra", "==", quadra)
+          .where("horario", "==", horario)
+          .get()
+          .then(snapshot => {
+            if (snapshot.empty) {
+              alert("Reserva não encontrada.");
+              return;
+            }
+
+            snapshot.forEach(doc => {
+              doc.ref.delete().then(() => {
+                alert("Reserva cancelada.");
+                carregarReservas();
+              });
+            });
+          })
+          .catch(error => {
+            console.error("Erro ao cancelar:", error);
+            alert("Erro ao cancelar reserva: " + error.message);
+          });
+      };
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("dataSelecionada").innerText = formatarData(dataAtual);
+    carregarReservas();
+  });
+</script>
+
 </body>
 </html>
