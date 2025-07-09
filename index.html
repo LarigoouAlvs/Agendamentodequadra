@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agendamento Visual de Quadras</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <style>
+    .grid-container {
+      display: grid;
+      grid-template-columns: 150px repeat(7, 1fr);
+    }
+    .grid-item {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+      font-size: 0.875rem;
+    }
+    .disponivel {
+      background-color: #f97316;
+      color: white;
+      cursor: pointer;
+    }
+    .ocupado {
+      background-color: #6b7280;
+      color: white;
+    }
+    .reservado {
+      background-color: #3b82f6;
+      color: white;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 p-6">
+  <div class="max-w-7xl mx-auto">
+    <h1 class="text-3xl font-bold text-center mb-6">Agendamento de Quadras</h1>
+
+    <!-- Seletor de datas -->
+    <div class="flex items-center justify-center space-x-4 mb-4">
+      <button onclick="alterarDia(-1)" class="px-3 py-1 bg-gray-300 rounded">⬅️</button>
+      <h2 id="dataSelecionada" class="text-xl font-semibold">Hoje</h2>
+      <button onclick="alterarDia(1)" class="px-3 py-1 bg-gray-300 rounded">➡️</button>
+    </div>
+
+    <div class="overflow-x-auto bg-white p-4 rounded shadow">
+      <div class="grid-container font-semibold">
+        <div class="grid-item">Quadra</div>
+        <div class="grid-item">17h - 18h</div>
+        <div class="grid-item">18h - 19h</div>
+        <div class="grid-item">19h - 20h</div>
+        <div class="grid-item">20h - 21h</div>
+        <div class="grid-item">21h - 22h</div>
+        <div class="grid-item">22h - 23h</div>
+        <div class="grid-item">23h - 00h</div>
+      </div>
+
+      <!-- Quadras -->
+      <div id="quadrasContainer"></div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-white p-6 rounded shadow-md w-full max-w-md">
+      <h2 class="text-xl font-bold mb-4">Confirmar Agendamento</h2>
+      <p id="resumo" class="mb-4"></p>
+      <input id="nome" type="text" placeholder="Seu nome" class="w-full mb-2 p-2 border rounded">
+      <input id="telefone" type="text" placeholder="Telefone" class="w-full mb-4 p-2 border rounded">
+      <div class="flex justify-end space-x-2">
+        <button onclick="fecharModal()" class="px-4 py-2 bg-gray-400 text-white rounded">Cancelar</button>
+        <button onclick="confirmarReserva()" class="px-4 py-2 bg-blue-600 text-white rounded">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "SUA_API_KEY",
+      authDomain: "SEU_AUTH_DOMAIN",
+      projectId: "SEU_PROJECT_ID",
+      storageBucket: "SEU_BUCKET",
+      messagingSenderId: "SEU_SENDER_ID",
+      appId: "SEU_APP_ID"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    let btnSelecionado = null;
+    let dadosReserva = {};
+    let dataAtual = new Date();
+
+    const horarios = [
+      "17h - 18h",
+      "18h - 19h",
+      "19h - 20h",
+      "20h - 21h",
+      "21h - 22h",
+      "22h - 23h",
+      "23h - 00h"
+    ];
+
+    const quadras = [
+      { nome: "AREIA 1 COBERTA", valor: 100 },
+      { nome: "AREIA 2 DESCOBERTA", valor: 90 },
+      { nome: "SOCIETY 1", valor: 110 },
+      { nome: "SOCIETY 2", valor: 110 },
+      { nome: "FUTVÔLEI 1", valor: 100 },
+      { nome: "FUTVÔLEI 2", valor: 100 }
+    ];
+
+    function formatarData(data) {
+      return data.toLocaleDateString('pt-BR');
+    }
+
+    function renderQuadras() {
+      document.getElementById("dataSelecionada").innerText = formatarData(dataAtual);
+      const quadrasContainer = document.getElementById("quadrasContainer");
+      quadrasContainer.innerHTML = "";
+      quadras.forEach(q => {
+        const row = document.createElement("div");
+        row.className = "grid-container";
+        const cellQuadra = document.createElement("div");
+        cellQuadra.className = "grid-item font-bold text-gray-700";
+        cellQuadra.textContent = q.nome;
+        row.appendChild(cellQuadra);
+        horarios.forEach(h => {
+          const btn = document.createElement("div");
+          btn.className = "grid-item disponivel";
+          btn.textContent = `R$${q.valor}`;
+          btn.onclick = () => abrirFormulario(btn, q.nome, h, q.valor);
+          row.appendChild(btn);
+        });
+        quadrasContainer.appendChild(row);
+      });
+    }
+
+    function alterarDia(dias) {
+      dataAtual.setDate(dataAtual.getDate() + dias);
+      renderQuadras();
+    }
+
+    function abrirFormulario(btn, quadra, horario, valor) {
+      btnSelecionado = btn;
+      dadosReserva = { quadra, horario, valor, data: formatarData(dataAtual) };
+      document.getElementById("resumo").innerText = `${quadra} - ${horario} - R$${valor} em ${formatarData(dataAtual)}`;
+      document.getElementById("modal").classList.remove("hidden");
+    }
+
+    function fecharModal() {
+      document.getElementById("modal").classList.add("hidden");
+      document.getElementById("nome").value = '';
+      document.getElementById("telefone").value = '';
+    }
+
+    function confirmarReserva() {
+      const nome = document.getElementById("nome").value;
+      const telefone = document.getElementById("telefone").value;
+
+      if (!nome || !telefone) {
+        alert("Preencha nome e telefone.");
+        return;
+      }
+
+      const reserva = { nome, telefone, ...dadosReserva, timestamp: new Date().toISOString() };
+
+      db.collection("reservas").add(reserva)
+        .then(() => {
+          const msg = `Olá! Reserva confirmada:\nQuadra: ${reserva.quadra}\nHorário: ${reserva.horario}\nData: ${reserva.data}\nNome: ${reserva.nome}\nTelefone: ${reserva.telefone}`;
+          const link = `https://wa.me/5547997212156?text=${encodeURIComponent(msg)}`;
+          window.open(link, '_blank');
+
+          btnSelecionado.classList.remove("disponivel");
+          btnSelecionado.classList.add("reservado");
+          btnSelecionado.textContent = "Reservado";
+          fecharModal();
+          alert("Reserva confirmada!");
+        })
+        .catch(err => alert("Erro ao salvar: " + err.message));
+    }
+
+    renderQuadras();
+  </script>
+</body>
+</html>
