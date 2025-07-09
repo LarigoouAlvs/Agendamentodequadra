@@ -166,8 +166,17 @@
       const reserva = { nome, telefone, ...dadosReserva, timestamp: new Date().toISOString() };
 
       db.collection("reservas").add(reserva)
-        .then(() => {
-          const msg = `Olá! Reserva confirmada:\nQuadra: ${reserva.quadra}\nHorário: ${reserva.horario}\nData: ${reserva.data}\nNome: ${reserva.nome}\nTelefone: ${reserva.telefone}`;
+        .then((docRef) => {
+          const cancelarLink = `https://agendarquadra.web.app/cancelar.html?id=${docRef.id}`;
+          const msg = `Olá! Reserva confirmada:
+Quadra: ${reserva.quadra}
+Horário: ${reserva.horario}
+Data: ${reserva.data}
+Nome: ${reserva.nome}
+Telefone: ${reserva.telefone}
+
+Para cancelar, clique aqui:
+${cancelarLink}`;
           const link = `https://wa.me/5547997212156?text=${encodeURIComponent(msg)}`;
           window.open(link, '_blank');
 
